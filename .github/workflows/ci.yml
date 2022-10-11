@@ -90,6 +90,9 @@ jobs:
       - run: cargo build --features=yubihsm-server,ledger,softsign --release
       - run: ls -lah ./target/release
       
+      - name: Generate the artifacts
+        uses: skx/github-action-build@master
+        
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
         env:
