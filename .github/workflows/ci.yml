@@ -89,16 +89,23 @@ jobs:
       # - run: cargo build --features=ledger --release
       - run: cargo build --features=yubihsm-server,ledger,softsign --release
       - run: ls -lah ./target/release
+
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: './target/release/tmkms'
       
       # - name: Generate the artifacts
       #   uses: skx/github-action-build@master
 
-      - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: './target/release/tmkms'
+      # - name: Upload the artifacts
+      #   uses: skx/github-action-publish-binaries@master
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     args: './target/release/tmkms'
 
   # test:
   #   name: Test Suite
