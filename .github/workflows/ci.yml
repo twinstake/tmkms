@@ -87,7 +87,7 @@ jobs:
       # - run: cargo build --features=yubihsm --release
       # - run: cargo build --features=yubihsm-server --release
       # - run: cargo build --features=ledger --release
-      - run: cargo build --features=yubihsm-server,ledger,softsign --release
+      - run: cargo build --features=yubihsm-server,tx-signer --release
       - run: ls -lah ./target/release
 
       # - uses: shallwefootball/s3-upload-action@master
