@@ -41,6 +41,7 @@ impl Client {
         let builder = hyper::Client::builder();
         let connector = HttpsConnectorBuilder::new()
             .with_webpki_roots()
+            .https_or_http()
             .enable_http1()
             .build(); // TODO: local cert truststore
         let response = builder.build(connector).request(request).await?;
