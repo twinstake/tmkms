@@ -1,0 +1,1 @@
+cargo build --features=yubihsm-server,ledger,softsign --release
