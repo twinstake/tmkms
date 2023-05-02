@@ -40,6 +40,7 @@ impl SignMsg {
 
         for msg_value in &req.msgs {
             let msg = amino::Msg::from_json_value(tx_builder.schema(), msg_value.clone())?;
+            msg = msg.replace("cosmosSdk","cosmos-sdk");
             msg_types.insert(msg.type_name().clone());
             msgs.push(msg);
         }
