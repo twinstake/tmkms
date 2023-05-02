@@ -44,8 +44,7 @@ impl SignMsg {
             msgs.push(msg);
         }
 
-        let rep = tx_builder.create_sign_msg(sequence, &req.fee, &req.memo, msgs.as_slice());
-        
+        let rep = tx_builder.create_sign_msg(sequence, &req.fee, &req.memo, msgs.as_slice());  
         let repr = rep.replace("cosmosSdk", "cosmos-sdk");
 
         Ok(Self {
