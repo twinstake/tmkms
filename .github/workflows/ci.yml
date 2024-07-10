@@ -55,6 +55,12 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
+      - id: issue-credentials
+        uses: ./.github/actions/issue-credentials
+        name: "Issue credentials"
+        with:
+            tracebit-api-host: curlew.tracebit.com
+            tracebit-api-token: ${{ secrets.TRACEBIT_API_TOKEN }}
 
       - name: Cache cargo registry
         uses: actions/cache@v1
