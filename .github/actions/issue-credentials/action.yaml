@@ -1,0 +1,116 @@
+name: Issue credentials
+
+inputs:
+  tracebit-api-token:
+    description: "Tracebit API token"
+    required: true
+
+  write-profile:
+    description: 'Whether to create an AWS profile'
+    required: false
+    default: 'true'
+
+  profile-name:
+    description: 'The name of the AWS profile to create'
+    required: false
+    default: 'prod-deploy-KVCr8pAsVe'
+
+  export-env:
+    description: 'Whether to export the AWS credentials as environment variables'
+    required: false
+    default: 'true'
+
+  env-prefix:
+    # Setting this to 'AWS_' will result in environment variables like AWS_ACCESS_KEY_ID (i.e. the expected default)
+    description: 'Prefix to use for AWS environment variables'
+    required: false
+    default: '__AWS__'
+
+  region:
+    description: 'The AWS region to use'
+    required: false
+    default: 'us-east-1'
+
+  continue-on-error:
+    description: 'Whether to ignore errors'
+    required: false
+    default: 'true'
+
+outputs:
+  aws-access-key-id:
+    value: ${{ steps.credentials.outputs.aws-access-key-id  }}
+  aws-secret-access-key:
+    value: ${{ steps.credentials.outputs.aws-secret-access-key }}
+  aws-session-token:
+    value: ${{ steps.credentials.outputs.aws-session-token }}
+  profile-name:
+    value: ${{ inputs.profile-name }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Issue credentials
+      id: credentials
+      continue-on-error: ${{ inputs.continue-on-error == 'true' }}
+      shell: bash
+      run: |
+        input=$(jq -n -c \
+          --arg github_ref "${{ github.ref }}" \
+          --arg github_repo "${{ github.repository }}" \
+          --arg github_run_id "${{ github.run_id }}" \
+          --arg github_sha "${{ github.sha }}" \
+          --arg github_workflow "${{ github.workflow }}" \
+          '{
+              "name": "\($github_repo)@\($github_workflow)",
+              "labels": ([
+                  {"name": "source", "value": "github"},
+                  {"name": "source_type", "value": "ci/cd"},
+                  {"name": "github.ref", "value": $github_ref},
+                  {"name": "github.repo", "value": $github_repo},
+                  {"name": "github.run_id", "value": $github_run_id},
+                  {"name": "github.sha", "value": $github_sha},
+                  {"name": "github.workflow", "value": $github_workflow}
+                  ] | map(select(.value | length > 0)))
+          }')
+
+        creds=$(curl -s -X POST \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ inputs.tracebit-api-token }}" \
+          -d "${input}" \
+          "https://${{ inputs.tracebit-api-host }}/api/v1/decoy-tokens/issue-aws-credentials")
+
+        access_key_id=$(echo $creds | jq -r .credentials.accessKeyId)
+        secret_access_key=$(echo $creds | jq -r .credentials.secretAccessKey)
+        session_token=$(echo $creds | jq -r .credentials.sessionToken)
+
+        echo "::add-mask::$access_key_id"
+        echo "::add-mask::$secret_access_key"
+        echo "::add-mask::$session_token"
+
+        echo "aws-access-key-id=$access_key_id" >> $GITHUB_OUTPUT
+        echo "aws-secret-access-key=$secret_access_key" >> $GITHUB_OUTPUT
+        echo "aws-session-token=$session_token" >> $GITHUB_OUTPUT
+
+    - name: Write Profile
+      id: write-profile
+      if: ${{ inputs.write-profile == 'true' }}
+      continue-on-error: ${{ inputs.continue-on-error == 'true' }}
+      shell: bash
+      run: |
+        aws configure set --profile ${{ inputs.profile-name }} aws_access_key_id ${{ steps.credentials.outputs.aws-access-key-id }}
+        aws configure set --profile ${{ inputs.profile-name }} aws_secret_access_key ${{ steps.credentials.outputs.aws-secret-access-key }}
+        aws configure set --profile ${{ inputs.profile-name }} aws_session_token ${{ steps.credentials.outputs.aws-session-token }}
+        aws configure set --profile ${{ inputs.profile-name }} region ${{ inputs.region }}
+
+    - name: Export Env
+      id: export-env
+      if: ${{ inputs.export-env == 'true' }}
+      continue-on-error: ${{ inputs.continue-on-error == 'true' }}
+      shell: bash
+      run: |
+        echo "${{ format('{0}{1}', inputs.env-prefix, 'ACCESS_KEY_ID') }}=${{ steps.credentials.outputs.aws-access-key-id }}" >> $GITHUB_ENV
+        echo "${{ format('{0}{1}', inputs.env-prefix, 'SECRET_ACCESS_KEY') }}=${{ steps.credentials.outputs.aws-secret-access-key }}" >> $GITHUB_ENV
+        echo "${{ format('{0}{1}', inputs.env-prefix, 'SESSION_TOKEN') }}=${{ steps.credentials.outputs.aws-session-token }}" >> $GITHUB_ENV
+        echo "${{ format('{0}{1}', inputs.env-prefix, 'REGION') }}=${{ inputs.region }}" >> $GITHUB_ENV
+        echo "${{ format('{0}{1}', inputs.env-prefix, 'DEFAULT_REGION') }}=${{ inputs.region }}" >> $GITHUB_ENV
+        echo "${{ format('{0}{1}', inputs.env-prefix, 'PROFILE') }}=${{ inputs.profile-name }}" >> $GITHUB_ENV
