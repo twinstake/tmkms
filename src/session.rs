@@ -149,18 +149,20 @@ impl Session {
         signable_msg.add_consensus_signature(consensus_sig);
         self.log_signing_request(&signable_msg, started_at).unwrap();
 
-        // Add extension signature if there are any extensions defined
-        if let Some(extension_msg) = signable_msg.extension_bytes(chain_id)? {
-            let started_at = Instant::now();
-            let extension_sig = chain.keyring.sign(public_key, &extension_msg)?;
-            signable_msg.add_extension_signature(extension_sig)?;
+        // Add extension signature if the message is a precommit for a non-empty block ID.
+        if chain.sign_extensions {
+            if let Some(extension_msg) = signable_msg.extension_bytes(chain_id)? {
+                let started_at = Instant::now();
+                let extension_sig = chain.keyring.sign(public_key, &extension_msg)?;
+                signable_msg.add_extension_signature(extension_sig)?;
 
-            info!(
-                "[{}@{}] signed vote extension ({} ms)",
-                &self.config.chain_id,
-                &self.config.addr,
-                started_at.elapsed().as_millis(),
-            );
+                info!(
+                    "[{}@{}] signed vote extension ({} ms)",
+                    &self.config.chain_id,
+                    &self.config.addr,
+                    started_at.elapsed().as_millis(),
+                );
+            }
         }
 
         Ok(signable_msg.into())

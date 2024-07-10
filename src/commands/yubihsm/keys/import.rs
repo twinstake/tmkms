@@ -1,8 +1,8 @@
 //! Import keys either from encrypted backups or existing plaintext keys
 
-use super::*;
+use super::{DEFAULT_DOMAINS, DEFAULT_WRAP_KEY};
 use crate::{keyring::ed25519, prelude::*};
-use abscissa_core::{Command, Runnable};
+use abscissa_core::Command;
 use clap::Parser;
 use std::{fs, path::PathBuf, process};
 use subtle_encoding::base64;
@@ -185,7 +185,7 @@ impl ImportCommand {
             DEFAULT_DOMAINS,
             yubihsm::Capability::SIGN_EDDSA | yubihsm::Capability::EXPORTABLE_UNDER_WRAP,
             yubihsm::asymmetric::Algorithm::Ed25519,
-            seed.as_bytes().as_ref(),
+            seed.as_bytes(),
         ) {
             status_err!("couldn't import key #{}: {}", self.key_id.unwrap(), e);
             process::exit(1);
