@@ -33,6 +33,7 @@ jobs:
 
       - name: Build tmkms binary
         run: |
+          cd tmkms
           ls -lah
           cargo build --features=yubihsm-server,ledger,softsign --release
 
