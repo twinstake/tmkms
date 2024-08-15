@@ -5,7 +5,8 @@ on:
     inputs:
       tag:
         description: 'Tag to create release from'
-        required: true
+        required: false
+        default: v0.14.0
 
 jobs:
   release:
@@ -28,7 +29,7 @@ jobs:
           override: true
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install libudev-dev  && apt install libusb-1.0-0-dev
+        run: sudo apt-get update && sudo apt-get install libudev-dev  && sudo apt install libusb-1.0-0-dev
 
       - name: Build tmkms binary
         run: |
