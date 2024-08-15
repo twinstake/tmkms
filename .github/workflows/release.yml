@@ -13,13 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout iqlusioninc/tmkms repository
-        uses: actions/checkout@v3
-        with:
-          repository: iqlusioninc/tmkms
-
-      - name: Checkout specific tag
+      - name: Checkout iqlusioninc/tmkms repository with tag
         run: |
+          git clone https://github.com/iqlusioninc/tmkms
           cd tmkms
           git branch
           git tag
