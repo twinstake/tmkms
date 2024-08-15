@@ -20,6 +20,7 @@ jobs:
 
       - name: Checkout specific tag
         run: |
+          cd tmkms
           git branch
           git tag
           git checkout ${{ inputs.tag }}
