@@ -17,10 +17,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: iqlusioninc/tmkms
-          fetch-depth: 0
 
       - name: Checkout specific tag
-        run: git checkout tags/${{ inputs.tag }}
+        run: |
+          git branch
+          git tag
+          git checkout ${{ inputs.tag }}
 
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
